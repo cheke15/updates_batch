@@ -11,16 +11,23 @@ if ($conn->connect_error) {
     die("Conexión fallida: " . $conn->connect_error);
 }
 
-function actualizarInventario($conn, $file_id)
+function actualizarInventario($conn, $id_archivo_batch)
 {
+
+    if (!is_numeric($id_archivo_batch)) {
+        echo "El 'id_archivo_batch' proporcionado no es válido.";
+        return;
+    }
+
+    // Preparar la consulta SQL con el parámetro id_archivo_batch
     $sql = "SELECT id_code_xls, id_inventario_equipos, field_change, dest_value 
             FROM cambios_inventario_batch 
-            WHERE process_status = 'Procesar' AND file_id = ?";
+            WHERE process_status = 'Procesar' AND id_archivo_batch = ?";
 
     $stmt = mysqli_prepare($conn, $sql);
 
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "s", $file_id);
+        mysqli_stmt_bind_param($stmt, "i", $id_archivo_batch);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -48,19 +55,19 @@ function actualizarInventario($conn, $file_id)
                 }
             }
         } else {
-            echo "No hay registros para procesar para el File ID: " . $file_id;
+            echo "No hay registros para procesar para el archivo batch: " . $id_archivo_batch;
         }
         mysqli_stmt_close($stmt);
     } else {
-        echo "Error en la preparación de la consulta: " . mysqli_error($conn);
+        echo "Error en la consulta: " . mysqli_error($conn);
     }
 }
 
-if (isset($_GET['file_id'])) {
-    $file_id = $_GET['file_id'];
-    actualizarInventario($conn, $file_id);
+if (isset($_GET['id_archivo_batch'])) {
+    $id_archivo_batch = $_GET['id_archivo_batch'];
+    actualizarInventario($conn, $id_archivo_batch);
 } else {
-    echo "File ID no proporcionado.";
+    echo "id del archivo batch no ha sido proporcionado.";
 }
 
 mysqli_close($conn);
